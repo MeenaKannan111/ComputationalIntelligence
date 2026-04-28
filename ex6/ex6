@@ -1,0 +1,460 @@
+calculator(N1, N2, +, R) :- R is N1 + N2.
+calculator(N1, N2, -, R) :- R is N1 - N2.
+calculator(N1, N2, *, R) :- R is N1 * N2.
+
+% Handle Division
+calculator(N1, N2, /, R) :-
+    N2 =\= 0 -> R is N1 / N2 ; (write('Error: Division by zero'), nl, fail).
+
+% Handle Modulo (use 'mod' function, and quote the % sign)
+calculator(N1, N2, '%', R) :-
+    N2 =\= 0 -> R is N1 mod N2 ; (write('Error: Division by zero'), nl, fail).
+
+run :-
+    write('Enter N1: '), read(N1),
+    write('Enter N2: '), read(N2),
+    write('Enter operator (+, -, *, /, %): '), read(Op),
+    (   calculator(N1, N2, Op, Result)
+    ->  format('Result = ~w~n', [Result])
+    ;   write('Calculation failed.'), nl
+    ).
+OUTPUT:
+1 ?- pwd.
+% c:/program files/swipl/
+true.
+
+2 ?- cd('Y:/SEM 6/EX 1/prolog').
+true.
+
+3 ?- pwd.
+% y:/sem 6/ex 1/prolog/
+true.
+
+5 ?- ['calculator'].
+true.
+
+5 ?- run.
+Enter N1: 5.
+Enter N2: |: 7.
+Enter operator (+, -, *, /, %): |: '+'
+.
+Result = 12
+true.
+
+6 ?- calculator(5,2,'%',R).
+R = 1.
+
+7 ?- calculator(5,0,'%',R).
+Error: Division by zero
+false.
+
+8 ?- calculator(5,0,'/',R).
+Error: Division by zero
+false.
+
+11 ?- calculator(5,1,'+',R).
+R = 6 .
+
+criminal
+
+% --- FACTS ---
+american(west).
+enemy(nono, america).
+owns(nono, m1).
+missile(m1).
+
+% --- RULES ---
+
+% A person is a criminal if they are American, possess a weapon,
+% sell it to a nation, and that nation is hostile.
+criminal(X) :-
+    american(X),
+    weapon(Y),
+    sells(X, Y, Z),
+    hostile(Z).
+
+% An enemy of America is considered hostile.
+hostile(X) :-
+    enemy(X, america).
+
+% All missiles are weapons.
+weapon(X) :-
+    missile(X).
+
+% If a person is American and a nation owns a missile,
+% we infer the person sold it to them.
+sells(west, X, nono) :-
+    american(west),
+    missile(X),
+    owns(nono, X).
+OUTPUT:
+12 ?-
+['criminal'].
+true.
+
+14 ?- criminal(west).
+true.
+
+15 ?- criminal(WHO).
+WHO = west.
+
+16 ?- criminal(north).
+false.
+
+17 ?- criminal(america).
+false.
+
+set operation:
+
+% --- Member ---
+member(X, [X|_]).
+member(X, [_|T]) :- member(X, T).
+
+
+% --- Union ---
+union([], L, L).
+union([H|T], L, R) :- member(H, L), !, union(T, L, R).
+union([H|T], L, [H|R]) :- union(T, L, R).
+
+
+% --- Subset ---
+subset([], _).
+subset([H|T], L) :- member(H, L), subset(T, L).
+
+
+% --- Intersection ---
+intersection([], _, []).
+intersection([H|T], L, [H|R]) :- member(H, L), !, intersection(T, L, R).
+intersection([_|T], L, R)     :- intersection(T, L, R).
+
+
+% --- Difference (A - B) ---
+difference([], _, []).
+difference([H|T], L, R)    :- member(H, L), !, difference(T, L, R).
+difference([H|T], L, [H|R]):- difference(T, L, R).
+
+
+% --- Cardinality (length of set) ---
+cardinality([], 0).
+cardinality([_|T], N) :-
+    cardinality(T, N1),
+    N is N1 + 1.
+
+
+% --- Is Equivalent (two sets have same elements) ---
+is_equivalent(A, B) :-
+    subset(A, B),
+    subset(B, A).
+
+
+run_sets :-
+    write('=== SET OPERATIONS MENU ==='), nl,
+    write('1. Member'), nl,
+    write('2. Union'), nl,
+    write('3. Subset'), nl,
+    write('4. Intersection'), nl,
+    write('5. Difference'), nl,
+    write('6. Cardinality'), nl,
+    write('7. Is Equivalent'), nl,
+    write('Enter choice (1-7): '),
+    read(Choice),
+    run_choice(Choice).
+
+% --- Choice 1: Member ---
+run_choice(1) :-
+    write('Enter element (e.g. 3): '), read(X),
+    write('Enter list (e.g. [1,2,3]): '), read(L),
+    (member(X, L) ->
+        write('Yes! Element IS a member.'), nl
+    ;
+        write('No! Element is NOT a member.'), nl
+    ).
+
+% --- Choice 2: Union ---
+run_choice(2) :-
+    write('Enter list 1 (e.g. [1,2,3]): '), read(L1),
+    write('Enter list 2 (e.g. [2,3,4]): '), read(L2),
+    union(L1, L2, Result),
+    write('Union = '), write(Result), nl.
+
+% --- Choice 3: Subset ---
+run_choice(3) :-
+    write('Enter smaller list (e.g. [1,2]): '), read(L1),
+    write('Enter bigger list (e.g. [1,2,3]): '), read(L2),
+    (subset(L1, L2) ->
+        write('Yes! It IS a subset.'), nl
+    ;
+        write('No! It is NOT a subset.'), nl
+    ).
+
+% --- Choice 4: Intersection ---
+run_choice(4) :-
+    write('Enter list 1 (e.g. [1,2,3]): '), read(L1),
+    write('Enter list 2 (e.g. [2,3,4]): '), read(L2),
+    intersection(L1, L2, Result),
+    write('Intersection = '), write(Result), nl.
+
+% --- Choice 5: Difference ---
+run_choice(5) :-
+    write('Enter list 1 (e.g. [1,2,3]): '), read(L1),
+    write('Enter list 2 (e.g. [2,3,4]): '), read(L2),
+    difference(L1, L2, Result),
+    write('Difference = '), write(Result), nl.
+
+% --- Choice 6: Cardinality ---
+run_choice(6) :-
+    write('Enter list (e.g. [1,2,3]): '), read(L),
+    cardinality(L, N),
+    write('Cardinality = '), write(N), nl.
+
+% --- Choice 7: Is Equivalent ---
+run_choice(7) :-
+    write('Enter list 1 (e.g. [1,2,3]): '), read(L1),
+    write('Enter list 2 (e.g. [3,1,2]): '), read(L2),
+    (is_equivalent(L1, L2) ->
+        write('Yes! Sets ARE equivalent.'), nl
+    ;
+        write('No! Sets are NOT equivalent.'), nl
+    ).
+
+% --- Invalid choice ---
+run_choice(_) :-
+    write('Invalid choice! Please enter 1-7.'), nl.
+
+OUTPUT:
+20 ?- run_sets.
+=== SET OPERATIONS MENU ===
+1. Member
+2. Union
+3. Subset
+4. Intersection
+5. Difference
+6. Cardinality
+7. Is Equivalent
+Enter choice (1-7): 1
+.
+Enter element (e.g. 3): |: 3.
+Enter list (e.g. [1,2,3]): |: [1,2,3].
+Yes! Element IS a member.
+true .
+
+Enter choice (1-7): 1.
+Enter element (e.g. 3): |: 3.
+Enter list (e.g. [1,2,3]): |: [1,2,4].
+No! Element is NOT a member.
+true .
+
+Enter choice (1-7): 2.
+Enter list 1 (e.g. [1,2,3]): |: [1,2,4].
+Enter list 2 (e.g. [2,3,4]): |: [1,9,4].
+Union = [2,1,9,4]
+true .
+Enter choice (1-7): 3.
+Enter smaller list (e.g. [1,2]): |: [1,2,4].
+Enter bigger list (e.g. [1,2,3]): |: [1,2,4,5,6].
+Yes! It IS a subset.
+true .
+
+Enter choice (1-7): 3.
+Enter smaller list (e.g. [1,2]): |: [1,2,4].
+Enter bigger list (e.g. [1,2,3]): |: [8,4,4].
+No! It is NOT a subset.
+true .
+.
+Enter list 1 (e.g. [1,2,3]): |: [1,2,4].
+Enter list 2 (e.g. [2,3,4]): |: [1,2,4].
+Intersection = [1,2,4]
+true .
+
+Enter list 1 (e.g. [1,2,3]): |: [1,2,4].
+Enter list 2 (e.g. [2,3,4]): |: [8,4,4].
+Difference = [1,2]
+true.
+
+Enter choice (1-7): 6.
+Enter list (e.g. [1,2,3]): |: [8,4,4].
+Cardinality = 3
+true .
+
+FAMILY TREE:
+% ==================================================
+% FACTS: Genders
+% ==================================================
+male(john). male(bob). male(tom). male(steve).
+male(fred). male(scott). male(jack). male(rich).
+male(mike). male(harry). male(carol). male(jim).
+
+female(patty). female(mary). female(alice). female(linda).
+female(valerie). female(barbara). female(donna). female(rachel).
+female(jane). female(cindy).
+
+% ==================================================
+% FACTS: Parentage (Based strictly on the image)
+% ==================================================
+% Carol: Parents are Patty & John
+father(john, carol).
+mother(patty, carol).
+
+% Tom & Linda: Parents are John & Mary
+father(john, tom).     mother(mary, tom).
+father(john, linda).   mother(mary, linda).
+
+% Jim: Parents are Mary & Bob
+father(bob, jim).
+mother(mary, jim).
+
+% Children of Tom & Alice
+father(tom, valerie).   mother(alice, valerie).
+father(tom, barbara).   mother(alice, barbara).
+
+% Children of Linda & Steve
+father(steve, jack).    mother(linda, jack).
+father(steve, rich).    mother(linda, rich).
+
+% Great-grandchildren generation
+father(fred, jane).     mother(valerie, jane).
+father(scott, cindy).   mother(barbara, cindy).
+father(jack, mike).     mother(donna, mike).
+father(rich, harry).    mother(rachel, harry).
+
+% ==================================================
+% RULES: Strict Logic
+% ==================================================
+parent(X, Y) :- father(X, Y) ; mother(X, Y).
+
+% STRICT SIBLING: Must share BOTH Father and Mother
+sibling(X, Y) :-
+    father(F, X), father(F, Y),
+    mother(M, X), mother(M, Y),
+    X \= Y.
+
+brother(X, Y) :- sibling(X, Y), male(X).
+sister(X, Y) :- sibling(X, Y), female(X).
+
+% Ancestry
+grandparent(X, Y) :- parent(X, Z), parent(Z, Y).
+grandfather(X, Y) :- grandparent(X, Y), male(X).
+grandmother(X, Y) :- grandparent(X, Y), female(X).
+
+% Extended Family
+aunt(X, Y) :- sister(X, P), parent(P, Y).
+uncle(X, Y) :- brother(X, P), parent(P, Y).
+cousin(X, Y) :- parent(P1, X), parent(P2, Y), sibling(P1, P2).
+
+% ==================================================
+% RELATION WRAPPER
+% ==================================================
+relation(X, Y, brother) :- brother(X, Y).
+relation(X, Y, sister) :- sister(X, Y).
+relation(X, Y, father) :- father(X, Y).
+relation(X, Y, mother) :- mother(X, Y).
+relation(X, Y, grandfather) :- grandfather(X, Y).
+relation(X, Y, grandmother) :- grandmother(X, Y).
+relation(X, Y, uncle) :- uncle(X, Y).
+relation(X, Y, aunt) :- aunt(X, Y).
+relation(X, Y, cousin) :- cousin(X, Y).
+[23bcs011@mepcolinux ex6]$ls
+calculator  criminal  family.pl  family1  set
+[23bcs011@mepcolinux ex6]$cat family.pl
+% ==================================================
+% FACTS: Genders
+% ==================================================
+male(john). male(bob). male(tom). male(steve).
+male(fred). male(scott). male(jack). male(rich).
+male(mike). male(harry). male(carol). male(jim).
+
+female(patty). female(mary). female(alice). female(linda).
+female(valerie). female(barbara). female(donna). female(rachel).
+female(jane). female(cindy).
+
+% ==================================================
+% FACTS: Parentage (Based strictly on the image)
+% ==================================================
+father(john, carol).  mother(patty, carol).
+father(john, tom).    mother(mary, tom).
+father(john, linda).  mother(mary, linda).
+father(bob, jim).     mother(mary, jim).
+
+father(tom, valerie). mother(alice, valerie).
+father(tom, barbara). mother(alice, barbara).
+
+father(steve, jack).  mother(linda, jack).
+father(steve, rich).  mother(linda, rich).
+
+father(fred, jane).   mother(valerie, jane).
+father(scott, cindy). mother(barbara, cindy).
+father(jack, mike).   mother(donna, mike).
+father(rich, harry).  mother(rachel, harry).
+
+% ==================================================
+% RULES
+% ==================================================
+parent(X, Y) :- father(X, Y) ; mother(X, Y).
+
+sibling(X, Y) :-
+    father(F, X), father(F, Y),
+    mother(M, X), mother(M, Y),
+    X \= Y.
+
+brother(X, Y) :- sibling(X, Y), male(X).
+sister(X, Y) :- sibling(X, Y), female(X).
+
+grandparent(X, Y) :- parent(X, Z), parent(Z, Y).
+grandfather(X, Y) :- grandparent(X, Y), male(X).
+grandmother(X, Y) :- grandparent(X, Y), female(X).
+
+aunt(X, Y) :- sister(X, P), parent(P, Y).
+uncle(X, Y) :- brother(X, P), parent(P, Y).
+cousin(X, Y) :- parent(P1, X), parent(P2, Y), sibling(P1, P2).
+
+% ==================================================
+% RELATION WRAPPER WITH "NOT RELATED"
+% ==================================================
+is_related(X, Y, brother) :- brother(X, Y).
+is_related(X, Y, sister) :- sister(X, Y).
+is_related(X, Y, father) :- father(X, Y).
+is_related(X, Y, mother) :- mother(X, Y).
+is_related(X, Y, grandfather) :- grandfather(X, Y).
+is_related(X, Y, grandmother) :- grandmother(X, Y).
+is_related(X, Y, uncle) :- uncle(X, Y).
+is_related(X, Y, aunt) :- aunt(X, Y).
+is_related(X, Y, cousin) :- cousin(X, Y).
+
+relation(X, Y, R) :- is_related(X, Y, R).
+relation(X, Y, 'not related') :- \+ is_related(X, Y, _).
+
+OUTPUT:
+
+22 ?- aunt(X,barbara).
+X = linda ;
+false.
+
+23 ?- grandchild(X,john).
+X = valerie ;
+X = barbara ;
+X = jack .
+
+24 ?- grandchild(X,john).
+X = valerie ;
+X = barbara ;
+X = jack ;
+X = rich .
+
+24 ?- sibiling(X,john).
+Correct to: "sibling(X,john)"?
+Please answer 'y' or 'n'? yes
+false.
+
+25 ?- sibling(X,john).
+false.
+
+26 ?- sibling(X,tom).
+X = linda ;
+false.
+
+27 ?- cousin(X,valerie).
+X = jack ;
+X = rich .
+
+28 ?- relation(X,tom,linda).
+false.
